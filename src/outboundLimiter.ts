@@ -1,7 +1,7 @@
 import { log, Tag } from './logger';
 
-const BURST = parseInt(process.env.APPLE_BURST || '5', 10);
-const RATE_PER_SEC = parseFloat(process.env.APPLE_RATE || '3');
+const BURST = parseInt(process.env.APPLE_BURST || '3', 10);
+const RATE_PER_SEC = parseFloat(process.env.APPLE_RATE || '0.5');
 const RETRY_ATTEMPTS = parseInt(process.env.APPLE_RETRY_ATTEMPTS || '3', 10);
 const RETRY_BASE_MS = parseInt(process.env.APPLE_RETRY_BASE_MS || '500', 10);
 const CIRCUIT_THRESHOLD = parseInt(process.env.APPLE_CIRCUIT_THRESHOLD || '3', 10);
