@@ -27,6 +27,7 @@ export async function fetchAlbum(
     headers['media-user-token'] = mut;
   }
 
+  console.log(`[mut] album request → header attached: ${!!mut}`);
   const response = await fetch(url, { headers });
 
   if (!response.ok) {

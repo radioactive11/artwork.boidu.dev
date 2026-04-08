@@ -8,6 +8,9 @@ import { fetchAlbum, parseAlbumIdFromUrl } from './album';
 import { resolveVideoUrl } from './m3u8';
 
 const MEDIA_USER_TOKEN = process.env.MEDIA_USER_TOKEN;
+console.log(
+  `[mut] env loaded: ${MEDIA_USER_TOKEN ? `yes (${MEDIA_USER_TOKEN.length} chars)` : 'NO — MEDIA_USER_TOKEN is unset'}`
+);
 
 const app = new Hono();
 

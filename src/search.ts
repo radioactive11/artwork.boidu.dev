@@ -25,6 +25,7 @@ export async function searchTrack(
     headers['media-user-token'] = mut;
   }
 
+  console.log(`[mut] search request → header attached: ${!!mut}`);
   const response = await fetch(searchUrl, { headers });
 
   if (!response.ok) {
