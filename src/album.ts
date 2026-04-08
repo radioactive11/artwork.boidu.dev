@@ -13,17 +13,21 @@ export interface AlbumData {
 export async function fetchAlbum(
   albumId: string,
   token: string,
-  storefront: string = 'us'
+  storefront: string = 'vn',
+  mut?: string
 ): Promise<AlbumData | null> {
   const url = `${API_BASE}/catalog/${storefront}/albums/${albumId}?extend=editorialVideo`;
 
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Origin': 'https://music.apple.com',
-      'Referer': 'https://music.apple.com/',
-    },
-  });
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${token}`,
+    'Origin': 'https://music.apple.com',
+    'Referer': 'https://music.apple.com/',
+  };
+  if (mut) {
+    headers['media-user-token'] = mut;
+  }
+
+  const response = await fetch(url, { headers });
 
   if (!response.ok) {
     if (response.status === 401) {

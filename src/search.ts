@@ -8,20 +8,24 @@ export async function searchTrack(
   song: string,
   artist: string,
   token: string,
-  storefront: string = 'us',
+  storefront: string = 'vn',
   albumName?: string,
-  duration?: number
+  duration?: number,
+  mut?: string
 ): Promise<SearchResult | null> {
   const query = `${song} ${artist}`.trim();
   const searchUrl = `${API_BASE}/catalog/${storefront}/search?term=${encodeURIComponent(query)}&types=songs&limit=10`;
 
-  const response = await fetch(searchUrl, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Origin': 'https://music.apple.com',
-      'Referer': 'https://music.apple.com/',
-    },
-  });
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${token}`,
+    'Origin': 'https://music.apple.com',
+    'Referer': 'https://music.apple.com/',
+  };
+  if (mut) {
+    headers['media-user-token'] = mut;
+  }
+
+  const response = await fetch(searchUrl, { headers });
 
   if (!response.ok) {
     if (response.status === 401) {
