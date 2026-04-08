@@ -1,5 +1,6 @@
 import type { AppleMusicAlbumResponse, AppleMusicAlbum } from './types';
 import { log, Tag } from './logger';
+import { fetchAppleWithRetry, UpstreamRateLimitedError } from './outboundLimiter';
 
 const API_BASE = 'https://amp-api.music.apple.com/v1';
 
@@ -30,7 +31,7 @@ export async function fetchAlbum(
 
   log.info(Tag.ALBUM, '→ apple', { storefront, albumId, mut: !!mut });
   const start = Date.now();
-  const response = await fetch(url, { headers });
+  const response = await fetchAppleWithRetry(url, { headers }, 'album', Tag.ALBUM);
   const ms = Date.now() - start;
 
   if (!response.ok) {
@@ -41,6 +42,10 @@ export async function fetchAlbum(
     if (response.status === 404) {
       log.info(Tag.ALBUM, '← 404 not found', { albumId, ms });
       return null;
+    }
+    if (response.status === 429) {
+      log.error(Tag.ALBUM, '← 429 rate limited after retries', { ms });
+      throw new UpstreamRateLimitedError('album');
     }
     log.error(Tag.ALBUM, '← error', { status: response.status, ms });
     throw new Error(`Album fetch failed: ${response.status}`);

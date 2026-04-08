@@ -14,6 +14,7 @@ import {
   upsertAlbumCache,
 } from './resultCache';
 import { artworkRateLimit } from './rateLimit';
+import { UpstreamRateLimitedError } from './outboundLimiter';
 import { log, Tag } from './logger';
 
 const MEDIA_USER_TOKEN = process.env.MEDIA_USER_TOKEN;
@@ -60,6 +61,10 @@ async function handleArtwork(c: any): Promise<Response> {
     const result = await handleArtworkRequest(c.req.url);
     return c.json(result);
   } catch (error) {
+    if (error instanceof UpstreamRateLimitedError) {
+      log.warn(Tag.HTTP, 'upstream rate limited → 503', { endpoint: error.endpoint });
+      return c.json({ error: 'Upstream rate limited, try again shortly' }, 503);
+    }
     log.error(Tag.HTTP, 'unhandled request error', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return c.json({ error: message }, 500);
@@ -129,6 +134,7 @@ async function handleArtworkRequest(
           { albumId: resolvedAlbumId, trackName, trackArtist }
         );
       } catch (error) {
+        if (error instanceof UpstreamRateLimitedError) throw error;
         log.error(Tag.SEARCH, 'search failed', error);
         return { error: 'Search failed' };
       }
@@ -205,6 +211,7 @@ async function handleArtworkRequest(
       videoUrl,
     };
   } catch (error) {
+    if (error instanceof UpstreamRateLimitedError) throw error;
     log.error(Tag.ALBUM, 'fetch failed', error);
     return { error: 'Failed to fetch album data' };
   }

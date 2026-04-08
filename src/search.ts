@@ -1,5 +1,6 @@
 import type { AppleMusicSearchResponse, AppleMusicTrack, SearchResult } from './types';
 import { log, Tag } from './logger';
+import { fetchAppleWithRetry, UpstreamRateLimitedError } from './outboundLimiter';
 
 const API_BASE = 'https://amp-api.music.apple.com/v1';
 const MIN_SCORE_THRESHOLD = 0.6;
@@ -28,13 +29,17 @@ export async function searchTrack(
 
   log.info(Tag.SEARCH, '→ apple', { storefront, query, mut: !!mut, albumName, duration });
   const start = Date.now();
-  const response = await fetch(searchUrl, { headers });
+  const response = await fetchAppleWithRetry(searchUrl, { headers }, 'search', Tag.SEARCH);
   const ms = Date.now() - start;
 
   if (!response.ok) {
     if (response.status === 401) {
       log.warn(Tag.SEARCH, '← 401 TOKEN_EXPIRED', { ms });
       throw new Error('TOKEN_EXPIRED');
+    }
+    if (response.status === 429) {
+      log.error(Tag.SEARCH, '← 429 rate limited after retries', { ms });
+      throw new UpstreamRateLimitedError('search');
     }
     log.error(Tag.SEARCH, '← error', { status: response.status, ms });
     throw new Error(`Search failed: ${response.status}`);
